@@ -1,0 +1,72 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Dashboard - CRM System{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 30px; color: #333; font-size: 28px;">📊 Dashboard</h2>
+
+<div class="stats">
+    <div class="stat-card">
+        <h3>Total Clientes</h3>
+        <div class="value">{{ total_customers|default:0 }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Compañías</h3>
+        <div class="value">{{ total_companies|default:0 }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Representantes</h3>
+        <div class="value">{{ total_sales_reps|default:0 }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Interacciones</h3>
+        <div class="value">{{ total_interactions|default:0 }}</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px;">
+    <div>
+        <h3 style="margin-bottom: 20px; color: #333;">🎂 Cumpleaños Hoy</h3>
+        {% if birthdays_today %}
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px;">
+                {% for customer in birthdays_today %}
+                    <div style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+                        <strong>{{ customer.full_name }}</strong><br>
+                        <small style="color: #666;">{{ customer.company.name }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No hay cumpleaños hoy
+            </div>
+        {% endif %}
+    </div>
+    
+    <div>
+        <h3 style="margin-bottom: 20px; color: #333;">📅 Cumpleaños Esta Semana</h3>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px;">
+            <div style="font-size: 48px; font-weight: 700; color: #667eea; text-align: center;">
+                {{ birthdays_this_week }}
+            </div>
+            <div style="text-align: center; margin-top: 10px; color: #666;">
+                clientes cumplen años esta semana
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="{% url 'customer_list' %}?birthday=this_week" class="btn">
+                    Ver Lista Completa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 40px;">
+    <h3 style="margin-bottom: 20px; color: #333;">⚡ Acciones Rápidas</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="{% url 'customer_list' %}" class="btn">Ver Todos los Clientes</a>
+        <a href="{% url 'customer_list' %}?birthday=this_month" class="btn btn-secondary">Cumpleaños Este Mes</a>
+        <a href="/admin/crm/customer/add/" class="btn btn-secondary">Agregar Nuevo Cliente</a>
+    </div>
+</div>
+{% endblock %}

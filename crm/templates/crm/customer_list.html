@@ -1,0 +1,159 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}Clientes - CRM System{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 30px; color: #333; font-size: 28px;">👥 Lista de Clientes</h2>
+
+<!-- Filtros -->
+<div class="filters">
+    <h2>🔍 Filtros y Búsqueda</h2>
+    <form method="get" action="{% url 'customer_list' %}">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="search">Buscar por nombre o compañía</label>
+                <input 
+                    type="text" 
+                    id="search" 
+                    name="search" 
+                    placeholder="Ej: Juan Pérez, Acme Corp..." 
+                    value="{{ search_query }}"
+                >
+            </div>
+            
+            <div class="filter-group">
+                <label for="birthday">Filtrar por cumpleaños</label>
+                <select id="birthday" name="birthday">
+                    <option value="">Todos</option>
+                    <option value="today" {% if birthday_filter == 'today' %}selected{% endif %}>Hoy</option>
+                    <option value="this_week" {% if birthday_filter == 'this_week' %}selected{% endif %}>Esta Semana</option>
+                    <option value="this_month" {% if birthday_filter == 'this_month' %}selected{% endif %}>Este Mes</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="sort">Ordenar por</label>
+                <select id="sort" name="sort">
+                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Nombre</option>
+                    <option value="company" {% if sort_by == 'company' %}selected{% endif %}>Compañía</option>
+                    <option value="birthday" {% if sort_by == 'birthday' %}selected{% endif %}>Cumpleaños</option>
+                    <option value="last_interaction" {% if sort_by == 'last_interaction' %}selected{% endif %}>Última Interacción</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <div>
+                    <button type="submit">Aplicar Filtros</button>
+                    <a href="{% url 'customer_list' %}" class="btn btn-secondary">Limpiar</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Resumen -->
+{% if search_query or birthday_filter %}
+<div class="alert alert-info">
+    Mostrando {{ total_customers }} cliente{{ total_customers|pluralize }}
+    {% if search_query %}
+        que coinciden con "<strong>{{ search_query }}</strong>"
+    {% endif %}
+    {% if birthday_filter %}
+        {% if birthday_filter == 'today' %}
+            con cumpleaños <strong>hoy</strong>
+        {% elif birthday_filter == 'this_week' %}
+            con cumpleaños <strong>esta semana</strong>
+        {% elif birthday_filter == 'this_month' %}
+            con cumpleaños <strong>este mes</strong>
+        {% endif %}
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Tabla de clientes -->
+{% if page_obj.object_list %}
+<table>
+    <thead>
+        <tr>
+            <th>
+                <a href="?sort=name{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}">
+                    Nombre Completo {% if sort_by == 'name' %}↓{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort=company{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}">
+                    Compañía {% if sort_by == 'company' %}↓{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort=birthday{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}">
+                    Cumpleaños {% if sort_by == 'birthday' %}↓{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort=last_interaction{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}">
+                    Última Interacción {% if sort_by == 'last_interaction' %}↓{% endif %}
+                </a>
+            </th>
+            <th>Representante</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for customer in page_obj %}
+        <tr>
+            <td>
+                <strong>{{ customer.full_name }}</strong>
+            </td>
+            <td>{{ customer.company.name }}</td>
+            <td>
+                <span class="badge">🎂 {{ customer.birthday_formatted }}</span>
+            </td>
+            <td>{{ customer.get_last_interaction_display }}</td>
+            <td>{{ customer.sales_rep.get_full_name|default:customer.sales_rep.username }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Paginación -->
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+            &laquo; Primera
+        </a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+            ‹ Anterior
+        </a>
+    {% endif %}
+    
+    <span class="current">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+            Siguiente ›
+        </a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if birthday_filter %}&birthday={{ birthday_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+            Última &raquo;
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="no-results">
+    <h3>😕 No se encontraron clientes</h3>
+    <p>Intenta ajustar los filtros o realizar una nueva búsqueda.</p>
+    <a href="{% url 'customer_list' %}" class="btn" style="margin-top: 20px;">Ver Todos los Clientes</a>
+</div>
+{% endif %}
+
+<div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+    <p style="color: #666; text-align: center;">
+        Total de {{ total_customers }} cliente{{ total_customers|pluralize }} en el sistema
+    </p>
+</div>
+{% endblock %}
